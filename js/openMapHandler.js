@@ -1,13 +1,6 @@
 function showOpenMap(longitude, latitude) {
-    var map = createOpenMap(longitude, latitude);
-    var marker = createOpenMapMarker(longitude, latitude);
-    map.addLayer(marker);
-
-    var infoPopup = createOpenMapInfoPopup();
-    map.addOverlay(infoPopup);
-    
-    var closer = createOpenMapInfoPopupCloser(infoPopup);
-    setOpenMapOnclickHandler(map, infoPopup, closer);
+    map = createOpenMap(longitude, latitude);
+    handleOpenMapMarker(longitude, latitude);
 }
 
 function createOpenMap(longitude, latitude) {
@@ -23,6 +16,21 @@ function createOpenMap(longitude, latitude) {
             zoom: 18
         })
     });
+}
+
+function scrollOpenMapToPosition(longitude, latitude) {
+    handleOpenMapMarker(longitude, latitude);
+}
+
+function handleOpenMapMarker(longitude, latitude) {
+    var marker = createOpenMapMarker(longitude, latitude);
+    map.addLayer(marker);
+
+    var infoPopup = createOpenMapInfoPopup();
+    map.addOverlay(infoPopup);
+
+    var closer = createOpenMapInfoPopupCloser(infoPopup);
+    setOpenMapOnclickHandler(map, infoPopup, closer);
 }
 
 function createOpenMapMarker(longitude, latitude) {
@@ -63,7 +71,7 @@ function createOpenMapInfoPopupCloser(infoPopup) {
 function setOpenMapOnclickHandler(map, infoPopup, closer) {
     var content = document.getElementById("popup-content");
     map.on('singleclick', function(event) {
-        if (map.hasFeatureAtPixel(event.pixel) === true) {
+        if (map.hasFeatureAtPixel(event.pixel)) {
             var coordinate = event.coordinate;
             content.innerHTML = "You are here: " + ol.proj.toLonLat(coordinate);
             infoPopup.setPosition(coordinate);

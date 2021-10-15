@@ -1,35 +1,55 @@
+var watchId = null;
+var wantToSeeMap = true;
+var map = null;
+var mapProvider = null;
+var vanLangUniversityPosition = {
+    name: "Van Lang University",
+    coords: {
+        latitude: 10.8271789,
+        longitude: 106.6989877
+    }
+};
+
 getMyLocation();
 
 function getMyLocation() {
     var geoLoc = navigator.geolocation;
     if (geoLoc) {
-        geoLoc.getCurrentPosition(processPosition, processError);
+        var watchButton = document.getElementById("watch");
+        watchButton.onclick = watchLocation;
+        var clearWatchButton = document.getElementById("clearWatch");
+        clearWatchButton.onclick = clearWatch;
     } else {
         alert("Oops, no geolocation support");
+    }
+}
+
+function watchLocation() {
+    watchId = navigator.geolocation.watchPosition(
+        processPosition,
+        processError, 
+        {enableHighAccuracy: true, timeout: 5000}
+    );
+}
+
+function clearWatch() {
+    if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
     }
 }
 
 function processPosition(myPosition) {
     var latitude = myPosition.coords.latitude;
     var longitude = myPosition.coords.longitude;
-    var vanLangUniversityPosition = {
-        name: "Van Lang University",
-        coords: {
-            latitude: 10.8271789,
-            longitude: 106.6989877
-        }
-    };
-    displayMyPosition(latitude, longitude);
-    displayDistance(myPosition, vanLangUniversityPosition);
+    var accuracy = myPosition.coords.accuracy;
+    var myPositionMessage = 
+        "You are at Latitude: " + latitude + ", Longitude: " + longitude +
+        " (with " + accuracy + " meters accuracy)";
     
-    var mapProvider = askForMapProvider();
-    showMapBy(mapProvider, latitude, longitude);
-}
-
-function displayMyPosition(latitude, longitude) {
-    var div = document.getElementById("location");
-    div.innerHTML = 
-        "You are at Latitude: " + latitude + ", Longitude: " + longitude;
+    displayMessage(myPositionMessage);
+    displayDistance(myPosition, vanLangUniversityPosition);
+    handleMap(latitude, longitude);
 }
 
 function displayDistance(myPosition, destination) {
@@ -59,18 +79,38 @@ function degreesToRadians(degrees) {
     return radians;
 }
 
-function askForMapProvider() {
+function handleMap(latitude, longitude) {
+    if (wantToSeeMap && !mapIsExisting()) {
+        mapProvider = getMapProvider();
+        if (mapProvider) {
+            showMapBy(mapProvider, latitude, longitude);
+        } else {
+            wantToSeeMap = false;
+        }
+    } else if (wantToSeeMap && mapIsExisting()) {
+        scrollMapToPosition(latitude, longitude);
+    }
+}
+
+function mapIsExisting() {
+    return map !== null;
+}
+
+function getMapProvider() {
     var mapProvider;
     do {
-        mapProvider = prompt(
-            "Which map provider would your prefer?", 
-            "'google map' or 'open map' (Please type precisely!)"
-        );
-        if (mapProvider === null) continue;
-        mapProvider = mapProvider.toLowerCase();
-    } while ( !providerIsCorrect(mapProvider) );
-    
+        mapProvider = askForMapProvider();
+    } while (mapProvider !== null && !providerIsCorrect(mapProvider));
     return mapProvider;
+}
+
+function askForMapProvider() {
+    mapProvider = prompt(
+        "Which map provider would your prefer?", 
+        "'google map' or 'open map' (Please type precisely!)"
+    );
+    if (mapProvider === null) return null;
+    return mapProvider.toLowerCase();
 }
 
 function providerIsCorrect(mapProvider) {
@@ -87,6 +127,16 @@ function showMapBy(mapProvider, latitude, longitude) {
     }
 }
 
+function scrollMapToPosition(latitude, longitude) {
+    switch (mapProvider) {
+        case "google map":
+            scrollGoogleMapToPosition(latitude, longitude);
+            break;
+        case "open map":
+            scrollOpenMapToPosition(longitude, latitude);
+    }
+}
+
 function processError(error) {
     var errorTypes = {
         0: "Unknown error",
@@ -96,10 +146,17 @@ function processError(error) {
     };
 
     var errorMessage = errorTypes[error.code];
-    if (error.code == 0 || error.code == 2) {
-        errorMessage = errorMessage + " " + error.message;
-    }
+    errorMessage += getMoreInfoIfErrorIsNotClear(error);
+    displayMessage(errorMessage);
+}
 
-    var div = document.getElementById("location");
-    div.innerHTML = errorMessage;
+function getMoreInfoIfErrorIsNotClear(error) {
+    if (error.code === 0 || error.code === 2) 
+        return error.message;
+    return "";
+}
+
+function displayMessage(message) {
+    var locationDiv = document.getElementById("location");
+    locationDiv.innerHTML = message;
 }

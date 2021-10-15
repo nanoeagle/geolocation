@@ -1,9 +1,7 @@
 function showGoogleMap(latitude, longitude) {
     var latLong = new google.maps.LatLng(latitude, longitude);
-    var map = createGoogleMap(latLong);
-    var marker = createGoogleMapMarker(map, latLong);
-    var infoWindow = createGoogleMapInfoWindow(latitude, longitude, latLong);
-    addGoogleMapMarkerListener(map, marker, infoWindow);
+    map = createGoogleMap(latLong);
+    handleGoogleMapMarker(latitude, longitude, latLong);
 }
 
 function createGoogleMap(latLong) {
@@ -16,7 +14,19 @@ function createGoogleMap(latLong) {
     return new google.maps.Map(mapDiv, mapOptions);
 }
 
-function createGoogleMapMarker(map, latLong) {
+function scrollGoogleMapToPosition(latitude, longitude) {
+    var latLong = new google.maps.LatLng(latitude, longitude);
+    map.panTo(latLong);
+    handleGoogleMapMarker(latitude, longitude, latLong);
+}
+
+function handleGoogleMapMarker(latitude, longitude, latLong) {
+    var marker = createGoogleMapMarker(latLong);
+    var infoWindow = createGoogleMapInfoWindow(latitude, longitude, latLong);
+    addGoogleMapMarkerListener(marker, infoWindow);
+}
+
+function createGoogleMapMarker(latLong) {
     var title = "Your Location";
     var markerOptions = {
         map: map,
@@ -36,7 +46,7 @@ function createGoogleMapInfoWindow(latitude, longitude, latLong) {
     return new google.maps.InfoWindow(infoWindowOptions);
 }
 
-function addGoogleMapMarkerListener(map, marker, infoWindow) {
+function addGoogleMapMarkerListener(marker, infoWindow) {
     google.maps.event.addListener(marker, "click", function() {
         infoWindow.open(map);
     });

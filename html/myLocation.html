@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Where am I?</title>
+    <title>Wherever you go, there you are</title>
     <link rel="stylesheet" href="../css/myLocation.css">
     <link rel="stylesheet" href="../css/openMap.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.8.1/css/ol.css">
@@ -13,6 +13,10 @@
     <script src="../js/myLocation.js" defer></script>
   </head>
   <body>
+    <form>
+      <input type="button" id="watch" value="Watch me">
+      <input type="button" id="clearWatch" value="Clear watch">
+    </form>
     <div id="location">Your location will go here.</div>
     <div id="distance">Distance from your location will go here.</div>
     <div id="map"></div>
