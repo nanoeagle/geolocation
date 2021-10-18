@@ -1,7 +1,7 @@
-function showGoogleMap(latitude, longitude) {
-    var latLong = new google.maps.LatLng(latitude, longitude);
+function showGoogleMap(myCoords) {
+    var latLong = new google.maps.LatLng(myCoords.latitude, myCoords.longitude);
     map = createGoogleMap(latLong);
-    handleGoogleMapMarker(latitude, longitude, latLong);
+    handleGoogleMapMarker(myCoords, latLong);
 }
 
 function createGoogleMap(latLong) {
@@ -14,15 +14,15 @@ function createGoogleMap(latLong) {
     return new google.maps.Map(mapDiv, mapOptions);
 }
 
-function scrollGoogleMapToPosition(latitude, longitude) {
-    var latLong = new google.maps.LatLng(latitude, longitude);
+function scrollGoogleMapToPosition(myCoords) {
+    var latLong = new google.maps.LatLng(myCoords.latitude, myCoords.longitude);
     map.panTo(latLong);
-    handleGoogleMapMarker(latitude, longitude, latLong);
+    handleGoogleMapMarker(myCoords, latLong);
 }
 
-function handleGoogleMapMarker(latitude, longitude, latLong) {
+function handleGoogleMapMarker(myCoords, latLong) {
     var marker = createGoogleMapMarker(latLong);
-    var infoWindow = createGoogleMapInfoWindow(latitude, longitude, latLong);
+    var infoWindow = createGoogleMapInfoWindow(myCoords, latLong);
     addGoogleMapMarkerListener(marker, infoWindow);
 }
 
@@ -37,8 +37,9 @@ function createGoogleMapMarker(latLong) {
     return new google.maps.Marker(markerOptions);
 }
 
-function createGoogleMapInfoWindow(latitude, longitude, latLong) {
-    var content = "You are here: " + latitude + ", " + longitude;
+function createGoogleMapInfoWindow(myCoords, latLong) {
+    var content = 
+        "You are here: " + myCoords.latitude + ", " + myCoords.longitude;
     var infoWindowOptions = {
         content: content,
         position: latLong

@@ -1,3 +1,6 @@
+const MIN_DISTANCE_IN_KM_TO_ADD_NEW_MARKERS = 0.02;
+const EARTH_RADIUS_IN_KM = 6371;
+
 var watchId = null;
 var wantToSeeMap = true;
 var map = null;
@@ -9,6 +12,7 @@ var vanLangUniversityPosition = {
         longitude: 106.6989877
     }
 };
+var myPreviousCoords = null;
 
 getMyLocation();
 
@@ -40,55 +44,40 @@ function clearWatch() {
 }
 
 function processPosition(myPosition) {
-    var latitude = myPosition.coords.latitude;
-    var longitude = myPosition.coords.longitude;
-    var accuracy = myPosition.coords.accuracy;
+    var myCoords = myPosition.coords;
     var myPositionMessage = 
-        "You are at Latitude: " + latitude + ", Longitude: " + longitude +
-        " (with " + accuracy + " meters accuracy)";
+        "You are at Latitude: " + myCoords.latitude + 
+        ", Longitude: " + myCoords.longitude +
+        " (with " + myCoords.accuracy + " meters accuracy)";
     
     displayMessage(myPositionMessage);
     displayDistance(myPosition, vanLangUniversityPosition);
-    handleMap(latitude, longitude);
+    handleMap(myCoords);
 }
 
 function displayDistance(myPosition, destination) {
-    var distance = computeDistance(myPosition.coords, destination.coords);
+    var distance = computeDistanceInKm(myPosition.coords, destination.coords);
     var distanceDiv = document.getElementById("distance");
     distanceDiv.innerHTML = "You are " + distance 
-        + (distance === 1 ? " km" : " kms") + " from " + destination.name;
+        + (distance === 1 ? " km" : " kms") + " from " 
+        + destination.name;
 }
 
-function computeDistance(startCoords, destCoords) {
-    var startLatRads = degreesToRadians(startCoords.latitude);
-    var startLongRads = degreesToRadians(startCoords.longitude);
-    var destLatRads = degreesToRadians(destCoords.latitude);
-    var destLongRads = degreesToRadians(destCoords.longitude);
-    var Radius = 6371; // radius of the Earth in km
-    var distance = 
-        Math.acos(
-            Math.sin(startLatRads) * Math.sin(destLatRads) +
-            Math.cos(startLatRads) * Math.cos(destLatRads) *
-            Math.cos(startLongRads - destLongRads)
-        ) * Radius;
-    return distance;
-}
-
-function degreesToRadians(degrees) {
-    var radians = (degrees * Math.PI)/180;
-    return radians;
-}
-
-function handleMap(latitude, longitude) {
+function handleMap(myCoords) {
     if (wantToSeeMap && !mapIsExisting()) {
         mapProvider = getMapProvider();
         if (mapProvider) {
-            showMapBy(mapProvider, latitude, longitude);
+            showMapBy(mapProvider, myCoords);
+            myPreviousCoords = myCoords;
         } else {
             wantToSeeMap = false;
         }
-    } else if (wantToSeeMap && mapIsExisting()) {
-        scrollMapToPosition(latitude, longitude);
+    } else if (
+        wantToSeeMap && mapIsExisting() && 
+        distanceInKmToNewCoords(myCoords) > MIN_DISTANCE_IN_KM_TO_ADD_NEW_MARKERS
+    ) {
+        scrollMapToPosition(myCoords);
+        myPreviousCoords = myCoords;
     }
 }
 
@@ -117,23 +106,46 @@ function providerIsCorrect(mapProvider) {
     return mapProvider === "google map" || mapProvider === "open map";
 }
 
-function showMapBy(mapProvider, latitude, longitude) {
+function showMapBy(mapProvider, myCoords) {
     switch (mapProvider) {
         case "google map":
-            showGoogleMap(latitude, longitude);
+            showGoogleMap(myCoords);
             break;
         case "open map":
-            showOpenMap(longitude, latitude);
+            showOpenMap(myCoords);
     }
 }
 
-function scrollMapToPosition(latitude, longitude) {
+function distanceInKmToNewCoords(myNewCoords) {
+    return computeDistanceInKm(myPreviousCoords, myNewCoords);
+}
+
+function computeDistanceInKm(startCoords, destCoords) {
+    var startLatRads = degreesToRadians(startCoords.latitude);
+    var startLongRads = degreesToRadians(startCoords.longitude);
+    var destLatRads = degreesToRadians(destCoords.latitude);
+    var destLongRads = degreesToRadians(destCoords.longitude);
+    var distance = 
+        Math.acos(
+            Math.sin(startLatRads) * Math.sin(destLatRads) +
+            Math.cos(startLatRads) * Math.cos(destLatRads) *
+            Math.cos(startLongRads - destLongRads)
+        ) * EARTH_RADIUS_IN_KM;
+    return distance;
+}
+
+function degreesToRadians(degrees) {
+    var radians = (degrees * Math.PI)/180;
+    return radians;
+}
+
+function scrollMapToPosition(myCoords) {
     switch (mapProvider) {
         case "google map":
-            scrollGoogleMapToPosition(latitude, longitude);
+            scrollGoogleMapToPosition(myCoords);
             break;
         case "open map":
-            scrollOpenMapToPosition(longitude, latitude);
+            scrollOpenMapToPosition(myCoords);
     }
 }
 

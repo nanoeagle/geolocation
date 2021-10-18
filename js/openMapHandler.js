@@ -1,9 +1,9 @@
-function showOpenMap(longitude, latitude) {
-    map = createOpenMap(longitude, latitude);
-    handleOpenMapMarker(longitude, latitude);
+function showOpenMap(myCoords) {
+    map = createOpenMap(myCoords);
+    handleOpenMapMarker(myCoords);
 }
 
-function createOpenMap(longitude, latitude) {
+function createOpenMap(myCoords) {
     return new ol.Map({
         target: "map",
         layers: [
@@ -12,18 +12,20 @@ function createOpenMap(longitude, latitude) {
             })
         ],
         view: new ol.View({
-            center: ol.proj.fromLonLat([longitude, latitude]),
+            center: ol.proj.fromLonLat(
+                [myCoords.longitude, myCoords.latitude]
+            ),
             zoom: 18
         })
     });
 }
 
-function scrollOpenMapToPosition(longitude, latitude) {
-    handleOpenMapMarker(longitude, latitude);
+function scrollOpenMapToPosition(myCoords) {
+    handleOpenMapMarker(myCoords);
 }
 
-function handleOpenMapMarker(longitude, latitude) {
-    var marker = createOpenMapMarker(longitude, latitude);
+function handleOpenMapMarker(myCoords) {
+    var marker = createOpenMapMarker(myCoords);
     map.addLayer(marker);
 
     var infoPopup = createOpenMapInfoPopup();
@@ -33,13 +35,15 @@ function handleOpenMapMarker(longitude, latitude) {
     setOpenMapOnclickHandler(map, infoPopup, closer);
 }
 
-function createOpenMapMarker(longitude, latitude) {
+function createOpenMapMarker(myCoords) {
     return markerLayer = new ol.layer.Vector({
         source: new ol.source.Vector({
             features: [
                 new ol.Feature({
                     geometry: new ol.geom.Point(
-                        ol.proj.fromLonLat([longitude, latitude])
+                        ol.proj.fromLonLat(
+                            [myCoords.longitude, myCoords.latitude]
+                        )
                     )
                 })
             ]
