@@ -1,10 +1,10 @@
 const MIN_DISTANCE_IN_KM_TO_ADD_NEW_MARKERS = 0.02;
 const EARTH_RADIUS_IN_KM = 6371;
 
+var watchButton = document.getElementById("watchBtn");
+var isWatching = false;
 var watchId = null;
-var wantToSeeMap = true;
-var map = null;
-var mapProvider = null;
+
 var vanLangUniversityPosition = {
     name: "Van Lang University",
     coords: {
@@ -14,17 +14,45 @@ var vanLangUniversityPosition = {
 };
 var myPreviousCoords = null;
 
+var wantToSeeMap = true;
+var map = null;
+var mapProvider = null;
+
 getMyLocation();
 
 function getMyLocation() {
     var geoLoc = navigator.geolocation;
     if (geoLoc) {
-        var watchButton = document.getElementById("watch");
-        watchButton.onclick = watchLocation;
-        var clearWatchButton = document.getElementById("clearWatch");
-        clearWatchButton.onclick = clearWatch;
+        watchButton.onclick = handleWatchButtonClick;
     } else {
         alert("Oops, no geolocation support");
+    }
+}
+
+function handleWatchButtonClick() {
+    if (isWatching) {
+        handleClearingWatch();
+    } else {
+        handleWatching();
+    }
+}
+
+function handleClearingWatch() {
+    clearWatch();
+    isWatching = false;
+    watchButton.innerHTML = "Watch me";
+}
+
+function handleWatching() {
+    watchLocation();
+    isWatching = true;
+    watchButton.innerHTML = "Clear watch"
+}
+
+function clearWatch() {
+    if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
     }
 }
 
@@ -34,13 +62,6 @@ function watchLocation() {
         processError, 
         {enableHighAccuracy: true, timeout: 5000}
     );
-}
-
-function clearWatch() {
-    if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-    }
 }
 
 function processPosition(myPosition) {
@@ -160,6 +181,7 @@ function processError(error) {
     var errorMessage = errorTypes[error.code];
     errorMessage += getMoreInfoIfErrorIsNotClear(error);
     displayMessage(errorMessage);
+    handleClearingWatch();
 }
 
 function getMoreInfoIfErrorIsNotClear(error) {
